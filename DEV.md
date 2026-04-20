@@ -75,10 +75,10 @@ Basic 認証は `.env` の `ADMIN_USERNAME` / `ADMIN_PASSWORD`。
 docker compose -f docker-compose.dev.yml exec leave-bot pip install -e ".[dev]"
 
 # 全テスト
-docker compose -f docker-compose.dev.yml exec leave-bot pytest
+docker compose -f docker-compose.dev.yml exec leave-bot python -m pytest
 
 # 特定ファイル
-docker compose -f docker-compose.dev.yml exec leave-bot pytest tests/test_leave_service.py -v
+docker compose -f docker-compose.dev.yml exec leave-bot python -m pytest tests/test_leave_service.py -v
 ```
 
 テストは `leavebot_test` DB 側で動き、実 DB(`leavebot`)の seed データには影響しません。
