@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: leave-bot-dev-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=leavebot
+      - POSTGRES_PASSWORD=leavebot
+      - POSTGRES_DB=leavebot
+      - TZ=Asia/Tokyo
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U leavebot -d leavebot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  leave-bot:
+    build:
+      context: .
+    image: leave-bot:dev
+    container_name: leave-bot-dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Tokyo
+      - DATABASE_URL=postgresql+psycopg://leavebot:leavebot@postgres:5432/leavebot
+    ports:
+      - "127.0.0.1:8088:8080"
+    volumes:
+      - ./app:/app/app
+      - ./alembic:/app/alembic
+      - ./alembic.ini:/app/alembic.ini
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --reload
+      - --proxy-headers
+
+volumes:
+  pgdata:

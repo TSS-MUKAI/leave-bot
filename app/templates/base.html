@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{% endblock %} — 有給申請Bot 管理</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+  <style>
+    body { padding-top: 60px; }
+    .nav-brand-leaf { color: #2e7d32; }
+    .status-pending { color: #ff8f00; }
+    .status-approved { color: #2e7d32; font-weight: 600; }
+    .status-rejected { color: #c62828; font-weight: 600; }
+    .status-canceled { color: #757575; }
+    .status-skipped { color: #9e9e9e; }
+    code.tiny { font-size: 0.8em; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg bg-white border-bottom fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('admin_index') }}">🍃 <span class="nav-brand-leaf">有給申請Bot 管理</span></a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link{% if nav_active == 'users' %} active{% endif %}" href="{{ url_for('admin_users') }}">ユーザ</a></li>
+          <li class="nav-item"><a class="nav-link{% if nav_active == 'depts' %} active{% endif %}" href="{{ url_for('admin_depts') }}">部署</a></li>
+          <li class="nav-item"><a class="nav-link{% if nav_active == 'requests' %} active{% endif %}" href="{{ url_for('admin_requests') }}">申請一覧</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <main class="container">
+    {% if flash %}
+    <div class="alert alert-{{ flash.level }} mt-3">{{ flash.message }}</div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll("select.user-picker").forEach(el => {
+        new TomSelect(el, {
+          create: false,
+          allowEmptyOption: !el.multiple,
+          placeholder: el.multiple ? "名前かユーザ名で検索して追加..." : "名前かユーザ名で検索...",
+          searchField: ["text"],
+          sortField: [{ field: "text", direction: "asc" }],
+          plugins: el.multiple ? ["remove_button"] : [],
+        });
+      });
+    });
+  </script>
+</body>
+</html>

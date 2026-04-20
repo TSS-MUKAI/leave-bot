@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}申請 #{{ req.id }}{% endblock %}
+{% block content %}
+<h3 class="my-3">申請 #{{ req.id }}</h3>
+<dl class="row">
+  <dt class="col-sm-2">申請者</dt><dd class="col-sm-10">@{{ applicant.username }} ({{ applicant.display_name }})</dd>
+  <dt class="col-sm-2">種別</dt><dd class="col-sm-10">{{ type_jp }}</dd>
+  <dt class="col-sm-2">期間</dt><dd class="col-sm-10">{{ req.start_date }} 〜 {{ req.end_date }}</dd>
+  <dt class="col-sm-2">日数</dt><dd class="col-sm-10">{{ req.business_days }}</dd>
+  <dt class="col-sm-2">理由</dt><dd class="col-sm-10">{{ req.reason }}</dd>
+  <dt class="col-sm-2">状態</dt><dd class="col-sm-10 status-{{ req.status }}">{{ status_jp }} (段階 {{ req.current_stage }})</dd>
+  <dt class="col-sm-2">申請日</dt><dd class="col-sm-10">{{ req.created_at | jst }}</dd>
+  {% if req.decided_at %}<dt class="col-sm-2">決定日</dt><dd class="col-sm-10">{{ req.decided_at | jst }}</dd>{% endif %}
+</dl>
+
+<h5 class="mt-4">承認レコード</h5>
+<table class="table table-sm">
+  <thead><tr><th>段階</th><th>ロール</th><th>承認者</th><th>状態</th><th>コメント</th><th>決定日時</th></tr></thead>
+  <tbody>
+    {% for a in approvals %}
+    <tr>
+      <td>{{ a.stage }}</td>
+      <td>{{ a.role }}</td>
+      <td>{% if a.approver %}@{{ a.approver.username }}{% else %}<span class="text-muted">(未割当)</span>{% endif %}</td>
+      <td class="status-{{ a.status }}">{{ a.status }}</td>
+      <td>{{ a.comment or '' }}</td>
+      <td><small>{{ a.decided_at or '' }}</small></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h5 class="mt-4">監査ログ</h5>
+<table class="table table-sm">
+  <thead><tr><th>日時</th><th>アクション</th><th>操作者</th><th>ペイロード</th></tr></thead>
+  <tbody>
+    {% for e in audit %}
+    <tr>
+      <td><small>{{ e.created_at }}</small></td>
+      <td>{{ e.action }}</td>
+      <td>{% if e.actor %}@{{ e.actor.username }}{% else %}—{% endif %}</td>
+      <td><code class="tiny">{{ e.payload }}</code></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% if req.status in ['pending', 'approved'] %}
+<hr class="my-4">
+<div class="card border-secondary my-4">
+  <div class="card-header bg-light">
+    <h5 class="mb-0">🗑️ 申請の取消</h5>
+  </div>
+  <div class="card-body">
+    <p class="small text-muted">
+      {% if req.status == 'approved' %}
+      承認済みの申請を、事情により取消す場合に使用します。
+      {% else %}
+      承認待ちの申請を管理者が取消します。
+      {% endif %}
+      この操作は監査ログに記録されます。
+    </p>
+    <form method="POST" action="{{ url_for('admin_request_override_cancel', request_id=req.id) }}"
+          onsubmit="return confirm('申請 #{{ req.id }} を取消します。よろしいですか?');">
+      <div class="mb-2">
+        <textarea name="reason" class="form-control form-control-sm" rows="2"
+                  placeholder="取消理由(任意・申請者に通知されます)"></textarea>
+      </div>
+      <button type="submit" class="btn btn-warning btn-sm">🗑️ 取消する</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+{% if req.status == 'pending' %}
+<div class="card border-warning my-4">
+  <div class="card-header bg-warning bg-opacity-25">
+    <h5 class="mb-0">⚠️ 管理者による代行処理</h5>
+  </div>
+  <div class="card-body">
+    <p class="small text-muted">
+      現在の承認段階: <strong>{{ req.current_stage }}</strong><br>
+      通常は上記の承認者が対応すべきですが、全員不在等でやむを得ない場合のみ代行してください。
+      この操作は監査ログに記録されます。
+    </p>
+    <div class="row g-3">
+      <div class="col-md-6 pe-md-4 border-end">
+        <h6 class="text-success">代行承認</h6>
+        <form method="POST" action="{{ url_for('admin_request_override_approve', request_id=req.id) }}"
+              onsubmit="return confirm('申請 #{{ req.id }} を代行で承認します。よろしいですか?');">
+          <button type="submit" class="btn btn-success">✅ 代行承認する</button>
+        </form>
+      </div>
+      <div class="col-md-6 ps-md-4">
+        <h6 class="text-danger">代行却下</h6>
+        <form method="POST" action="{{ url_for('admin_request_override_reject', request_id=req.id) }}"
+              onsubmit="return confirm('申請 #{{ req.id }} を代行で却下します。よろしいですか?');">
+          <div class="mb-2">
+            <textarea name="comment" class="form-control form-control-sm" rows="2"
+                      placeholder="却下理由(必須・申請者に通知されます)" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-danger btn-sm">❌ 代行却下する</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-light mt-4">
+  この申請は既に <strong>{{ status_jp }}</strong> です。代行処理はできません。
+</div>
+{% endif %}
+
+<a href="{{ url_for('admin_requests') }}" class="btn btn-link">← 一覧へ戻る</a>
+{% endblock %}

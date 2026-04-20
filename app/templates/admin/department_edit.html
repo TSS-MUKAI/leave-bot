@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{% if dept %}部署編集{% else %}部署を追加{% endif %}{% endblock %}
+{% block content %}
+<h3 class="my-3">{% if dept %}部署編集: {{ dept.name }}{% else %}部署を追加{% endif %}</h3>
+<form method="POST" class="mt-4" action="{{ form_action }}">
+  <div class="mb-3">
+    <label class="form-label">部署名</label>
+    <input type="text" name="name" class="form-control" value="{{ dept.name if dept else '' }}" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">既定の上長</label>
+    <select name="manager_mm_id" class="form-select user-picker">
+      <option value="">(未設定)</option>
+      {% for c in candidates %}
+      <option value="{{ c.mm_user_id }}"{% if dept and c.mm_user_id == dept.manager_mm_id %} selected{% endif %}>@{{ c.username }} — {{ c.display_name }}</option>
+      {% endfor %}
+    </select>
+    <div class="form-text">この部署に所属するユーザで個別上長が未設定の人は、この人が承認者になります。</div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">既定の代理承認者(複数可)</label>
+    <select name="proxy_mm_ids" class="form-select user-picker" multiple>
+      {% for c in candidates %}
+      <option value="{{ c.mm_user_id }}"{% if c.mm_user_id in proxy_ids %} selected{% endif %}>@{{ c.username }} — {{ c.display_name }}</option>
+      {% endfor %}
+    </select>
+    <div class="form-text">この部署に所属するユーザで個別代理が未設定の人は、ここで設定した人達が代理承認者になります。</div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">保存</button>
+  <a href="{{ url_for('admin_depts') }}" class="btn btn-link">キャンセル</a>
+</form>
+
+{% if dept %}
+<hr class="my-4">
+<form method="POST" action="{{ url_for('admin_dept_delete', department_id=dept.id) }}" onsubmit="return confirm('部署「{{ dept.name }}」を削除します。所属ユーザの部署は未設定になります。よろしいですか?');">
+  <button type="submit" class="btn btn-outline-danger btn-sm">この部署を削除</button>
+</form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}ユーザを追加{% endblock %}
+{% block content %}
+<h3 class="my-3">ユーザを追加</h3>
+<p class="text-muted">Mattermost 上のユーザ名で検索して、Bot の管理対象に追加します。既に `/yukyu` を実行したユーザは自動登録されているので不要です。</p>
+<form method="POST" class="mt-4" action="{{ url_for('admin_add_user_submit') }}">
+  <div class="mb-3">
+    <label class="form-label">Mattermost ユーザ名</label>
+    <div class="input-group">
+      <span class="input-group-text">@</span>
+      <input type="text" name="username" class="form-control" placeholder="例: tanaka.taro" required>
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">追加</button>
+  <a href="{{ url_for('admin_users') }}" class="btn btn-link">戻る</a>
+</form>
+{% endblock %}

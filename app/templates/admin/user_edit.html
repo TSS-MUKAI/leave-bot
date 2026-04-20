@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}ユーザ編集: @{{ user.username }}{% endblock %}
+{% block content %}
+<h3 class="my-3">@{{ user.username }} — {{ user.display_name }}</h3>
+<form method="POST" class="mt-4" action="{{ url_for('admin_user_update', user_id=user.mm_user_id) }}">
+  <div class="mb-3">
+    <label class="form-label">部署</label>
+    <select name="department_id" class="form-select">
+      <option value="">(未所属)</option>
+      {% for d in departments %}
+      <option value="{{ d.id }}"{% if d.id == user.department_id %} selected{% endif %}>{{ d.name }}</option>
+      {% endfor %}
+    </select>
+    <div class="form-text">個別の上長・代理承認者が未設定の場合、部署の既定値が使われます。</div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">ロール</label>
+    <select name="role" class="form-select">
+      {% for r in roles %}
+      <option value="{{ r.value }}"{% if r.value == user.role %} selected{% endif %}>{{ r.label }}</option>
+      {% endfor %}
+    </select>
+    <div class="form-text">最終承認者に設定すると 2 段目の承認通知が届くようになります。</div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">個別の上長(未設定で部署既定を使用)</label>
+    <select name="manager_mm_id" class="form-select user-picker">
+      <option value="">(部署既定を使用)</option>
+      {% for c in candidates %}
+      <option value="{{ c.mm_user_id }}"{% if c.mm_user_id == user.manager_mm_id %} selected{% endif %}>@{{ c.username }} — {{ c.display_name }}</option>
+      {% endfor %}
+    </select>
+    {% if resolved_manager %}<div class="form-text">現在の実効値: @{{ resolved_manager.username }} ({{ resolved_manager.display_name }})</div>{% else %}<div class="form-text text-warning">現在の実効上長は未設定です。</div>{% endif %}
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">個別の代理承認者(複数可。未設定で部署既定を使用)</label>
+    <select name="proxy_mm_ids" class="form-select user-picker" multiple>
+      {% for c in candidates %}
+      <option value="{{ c.mm_user_id }}"{% if c.mm_user_id in individual_proxy_ids %} selected{% endif %}>@{{ c.username }} — {{ c.display_name }}</option>
+      {% endfor %}
+    </select>
+    {% if resolved_proxies %}<div class="form-text">現在の実効値: {% for p in resolved_proxies %}@{{ p.username }} ({{ p.display_name }}){% if not loop.last %}, {% endif %}{% endfor %}</div>{% endif %}
+    <div class="form-text">上長と同時に全員へ承認依頼 DM が飛び、先に押した人が承認者として確定します。空にすると部署既定の代理が使われます。</div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">在籍状態</label>
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" name="is_active" value="1"{% if user.is_active %} checked{% endif %}>
+      <label class="form-check-label">在籍中</label>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">保存</button>
+  <a href="{{ url_for('admin_users') }}" class="btn btn-link">キャンセル</a>
+</form>
+{% endblock %}

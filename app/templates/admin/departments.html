@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}部署{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center my-3">
+  <h3>部署一覧 ({{ rows|length }})</h3>
+  <a href="{{ url_for('admin_dept_add') }}" class="btn btn-primary btn-sm">+ 部署を追加</a>
+</div>
+<p class="text-muted">部署に既定の上長と代理承認者を設定すると、所属ユーザは個別設定を空にしておくだけで承認ルートを共有できます。</p>
+<table class="table table-striped table-sm align-middle">
+  <thead>
+    <tr>
+      <th>部署名</th>
+      <th>既定の上長</th>
+      <th>既定の代理承認者</th>
+      <th>所属人数</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.name }}</td>
+      <td>{% if r.manager %}@{{ r.manager.username }} <small>({{ r.manager.display_name }})</small>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+      <td>
+        {% if r.proxies %}
+          {% for p in r.proxies %}@{{ p.username }} <small>({{ p.display_name }})</small>{% if not loop.last %}, {% endif %}{% endfor %}
+        {% else %}
+          <span class="text-muted">—</span>
+        {% endif %}
+      </td>
+      <td>{{ r.member_count }}</td>
+      <td><a href="{{ url_for('admin_dept_edit', department_id=r.id) }}" class="btn btn-outline-primary btn-sm">編集</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
