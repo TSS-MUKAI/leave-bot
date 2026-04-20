@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     log_level: str = Field(default="info")
     tz: str = Field(default="Asia/Tokyo")
 
+    # When true, MattermostClient becomes a logging no-op (no HTTP calls).
+    # Lets developers exercise the full dialog/action flow without a live
+    # Mattermost server. Enabled automatically in docker-compose.dev.yml.
+    leave_bot_dev_mode: bool = Field(default=False)
+
     @property
     def slash_tokens(self) -> set[str]:
         return {t.strip() for t in self.leave_bot_slash_tokens.split(",") if t.strip()}

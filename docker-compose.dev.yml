@@ -12,6 +12,7 @@ services:
       - "127.0.0.1:55432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./scripts/dev_init_postgres.sh:/docker-entrypoint-initdb.d/10_dev_init.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U leavebot -d leavebot"]
       interval: 5s
@@ -32,12 +33,17 @@ services:
     environment:
       - TZ=Asia/Tokyo
       - DATABASE_URL=postgresql+psycopg://leavebot:leavebot@postgres:5432/leavebot
+      # Dev-mode stub: MattermostClient becomes a no-op that only logs.
+      # Unset or set to 0 when pointing at a real Mattermost.
+      - LEAVE_BOT_DEV_MODE=1
     ports:
       - "127.0.0.1:8088:8080"
     volumes:
       - ./app:/app/app
       - ./alembic:/app/alembic
       - ./alembic.ini:/app/alembic.ini
+      - ./tests:/app/tests
+      - ./scripts:/app/scripts
     command:
       - uvicorn
       - app.main:app
