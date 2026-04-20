@@ -38,9 +38,11 @@ def db(_test_engine) -> Iterator[Session]:
         yield sess
     finally:
         sess.close()
+        # users<->departments have a FK cycle, so truncate all tables in one
+        # CASCADE statement instead of per-table (which needs a topological sort).
+        names = ", ".join(f'"{t.name}"' for t in Base.metadata.tables.values())
         with _test_engine.begin() as c:
-            for t in reversed(Base.metadata.sorted_tables):
-                c.execute(text(f'TRUNCATE TABLE "{t.name}" RESTART IDENTITY CASCADE'))
+            c.execute(text(f"TRUNCATE TABLE {names} RESTART IDENTITY CASCADE"))
 
 
 class FakeMattermost:
