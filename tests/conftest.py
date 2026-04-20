@@ -20,7 +20,11 @@ def _test_engine():
     from app.db.models import Base
 
     eng = create_engine(TEST_DB_URL, future=True, pool_pre_ping=True)
-    Base.metadata.drop_all(eng)
+    # Reset via schema-level DROP to avoid SQLAlchemy's table-sort failure on
+    # the users<->departments FK cycle (drop_all can't topologically order them).
+    with eng.begin() as c:
+        c.execute(text("DROP SCHEMA public CASCADE"))
+        c.execute(text("CREATE SCHEMA public"))
     Base.metadata.create_all(eng)
     yield eng
     eng.dispose()
