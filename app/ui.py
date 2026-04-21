@@ -303,6 +303,9 @@ def menu_response() -> dict:
 
 
 # --- Text builders ----------------------------------------------------
+ROLE_JP = {"employee": "申請者", "manager": "承認者", "hr": "最終承認者"}
+
+
 def me_text(db: Session, user_id: str) -> str:
     user = user_svc.get_user(db, user_id)
     if user is None:
@@ -312,10 +315,11 @@ def me_text(db: Session, user_id: str) -> str:
         manager_txt = f"@{m.username} ({m.display_name})" if m else user.manager_mm_id
     else:
         manager_txt = "未設定 — 最終承認者にご連絡ください"
+    role_jp = ROLE_JP.get(user.role, user.role)
     return (
         "**あなたの登録情報**\n"
         f"- ユーザ: @{user.username} ({user.display_name})\n"
-        f"- ロール: `{user.role}`\n"
+        f"- ロール: {role_jp}\n"
         f"- 上長: {manager_txt}\n"
         "\n_上長の変更は最終承認者にご依頼ください_"
     )

@@ -251,10 +251,22 @@ def action(
         return {}
 
     if name == "me":
-        return {"ephemeral_text": ui.me_text(db, user_id)}
+        text = ui.me_text(db, user_id)
+        try:
+            get_mattermost().create_ephemeral_post(user_id, channel_id, text)
+        except Exception:
+            log.exception("create_ephemeral_post failed (me)")
+            return {"ephemeral_text": text}
+        return {}
 
     if name == "help":
-        return {"ephemeral_text": ui.help_text()}
+        text = ui.help_text()
+        try:
+            get_mattermost().create_ephemeral_post(user_id, channel_id, text)
+        except Exception:
+            log.exception("create_ephemeral_post failed (help)")
+            return {"ephemeral_text": text}
+        return {}
 
     if name == "approve":
         return _handle_approve_action(db, user_id, context)

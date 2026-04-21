@@ -53,6 +53,20 @@ class DevNoopMattermost:
         log.info("[dev-mm] update post=%s msg=%r", post_id, message[:200])
         return {"id": post_id}
 
+    def create_ephemeral_post(
+        self,
+        target_user_id: str,
+        channel_id: str,
+        message: str,
+        props: dict | None = None,
+    ) -> dict:
+        post_id = f"deveph{next(self._post_seq):020d}"
+        log.info(
+            "[dev-mm] ephemeral to=%s ch=%s id=%s msg=%r",
+            target_user_id, channel_id, post_id, message[:200],
+        )
+        return {"id": post_id}
+
     def open_dialog(self, trigger_id: str, dialog_url: str, dialog: dict) -> None:
         log.info("[dev-mm] open_dialog trigger=%s url=%s title=%s",
                  trigger_id, dialog_url, dialog.get("title", ""))
