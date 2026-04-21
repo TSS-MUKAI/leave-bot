@@ -310,9 +310,10 @@ def me_text(db: Session, user_id: str) -> str:
     user = user_svc.get_user(db, user_id)
     if user is None:
         return "ユーザ情報が未登録です。`/yukyu` を一度実行してください"
-    if user.manager_mm_id:
-        m = user_svc.get_user(db, user.manager_mm_id)
-        manager_txt = f"@{m.username} ({m.display_name})" if m else user.manager_mm_id
+    effective_manager_id = user_svc.resolve_manager(db, user)
+    if effective_manager_id:
+        m = user_svc.get_user(db, effective_manager_id)
+        manager_txt = f"@{m.username} ({m.display_name})" if m else effective_manager_id
     else:
         manager_txt = "未設定 — 最終承認者にご連絡ください"
     role_jp = ROLE_JP.get(user.role, user.role)
